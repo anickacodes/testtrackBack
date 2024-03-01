@@ -1,15 +1,14 @@
-// index.js
 const express = require('express');
 const app = express();
-const axios = require('axios');
+
 require('dotenv').config();
-const cors = require('cors'); // Import the cors package
+const cors = require('cors'); 
 const yelpApp = require('./app');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT ;
 
 app.use(express.json());
-app.use(cors()); // Use the cors middleware
+app.use(cors()); 
 
 app.use(yelpApp);
 
