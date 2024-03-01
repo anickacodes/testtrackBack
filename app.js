@@ -13,6 +13,7 @@ const locationSchema = new mongoose.Schema({
   userId: String,
   latitude: Number,
   longitude: Number,
+  timestamp: { type: Date, default: Date.now }
 });
 
 const Location = mongoose.model("Location", locationSchema);
@@ -71,12 +72,13 @@ app.post("/location", async (req, res) => {
     userId,
     latitude,
     longitude,
+
   });
   await newLocation.save();
 
   res
     .status(200)
-    .json({ message: "Location data received and stored successfully" });
+    .json({ message: "Location data received and stored successfully", timestamp: newLocation.timestamp  });
 });
 
 app.get("/user-locations", async (req, res) => {
