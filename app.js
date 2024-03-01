@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
 
-const url = process.env.MONGO_DB
+const url = process.env.MONGO_DB;
 
 mongoose.connect(url, {
   useNewUrlParser: true,
@@ -10,6 +10,7 @@ mongoose.connect(url, {
 });
 
 const locationSchema = new mongoose.Schema({
+  userId: String,
   latitude: Number,
   longitude: Number,
 });
@@ -21,7 +22,6 @@ app.use(express.json());
 app.get("/", async (req, res) => {
   res.status(200).send("We are liiive");
 });
-
 
 // app.get("/api/yelp", async (req, res) => {
 //   const { location, categories } = req.query;
@@ -61,13 +61,14 @@ app.get("/locations", async (req, res) => {
 });
 
 app.post("/location", async (req, res) => {
-  const { latitude, longitude } = req.body;
+  const { userId, latitude, longitude } = req.body;
 
   console.log(
     `Received location data - Latitude: ${latitude}, Longitude: ${longitude}`
   );
 
   const newLocation = new Location({
+    userId,
     latitude,
     longitude,
   });
@@ -78,6 +79,16 @@ app.post("/location", async (req, res) => {
     .json({ message: "Location data received and stored successfully" });
 });
 
+app.get("/user-locations", async (req, res) => {
+  const { userId } = req.query;
+
+  try {
+    const locations = await Location.find({ userId });
+    res.status(200).json(locations);
+  } catch (error) {
+    console.error("Error fetching user locations:", error);
+    res.status(500).json({ error: "Error fetching user locations" });
+  }
+});
+
 module.exports = app;
-
-
