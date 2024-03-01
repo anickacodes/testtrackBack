@@ -75,10 +75,16 @@ app.post("/location", async (req, res) => {
 
   });
   await newLocation.save();
+ 
+  const estTimestamp = new Date().toLocaleString(undefined, { hour12: true });
 
-  res
-    .status(200)
-    .json({ message: "Location data received and stored successfully", timestamp: newLocation.timestamp  });
+
+
+
+  res.status(200).json({
+    message: "Location data received and stored successfully",
+    timestamp: estTimestamp,
+  });
 });
 
 app.get("/user-locations", async (req, res) => {
