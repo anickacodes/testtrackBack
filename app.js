@@ -145,15 +145,15 @@ async function deleteObjects() {
   try {
     let deletedCount = 0;
     let shouldContinue = true;
-    const batchSize = 10;
+    const batchSize = 8;
 
     while (shouldContinue) {
       const locationsToDelete = await Location.find({
-        latitude:40.8571782,
-        longitude: -73.9014778,
+        latitude: 37.774929,
+        longitude: -122.419416,
       }).limit(batchSize);
 
-      if (locationsToDelete.length === 0) {
+      if (locationsToDelete.length <= 5) {
         shouldContinue = false;
         break;
       }
