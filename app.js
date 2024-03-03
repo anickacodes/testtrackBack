@@ -61,6 +61,8 @@ app.get("/locations", async (req, res) => {
   }
 });
 
+
+
 app.post("/location", async (req, res) => {
   const { userId, latitude, longitude } = req.body;
 
@@ -77,9 +79,6 @@ app.post("/location", async (req, res) => {
   await newLocation.save();
  
   const estTimestamp = new Date().toLocaleString(undefined, { hour12: true });
-
-
-
 
   res.status(200).json({
     message: "Location data received and stored successfully",
@@ -99,40 +98,64 @@ app.get("/user-locations", async (req, res) => {
   }
 });
 
-
-
-app.delete("/user-locations", async (req, res) => {
-  const { latitude, longitude, batchSize } = req.query;
-  const limit = parseInt(batchSize) || 100; 
-
-  let deletedCount = 0;
-  let page = 1;
-  let shouldContinue = true;
+app.get("/user-locations", async (req, res) => {
+  const { latitude, longitude } = req.query;
 
   try {
-    while (shouldContinue) {
-      const locationsToDelete = await Location.find({ latitude, longitude })
-        .limit(limit)
-        .skip((page - 1) * limit);
-
-      if (locationsToDelete.length === 0) {
-        shouldContinue = false;
-        break;
-      }
-
-      const result = await Location.deleteMany({ _id: { $in: locationsToDelete.map(loc => loc._id) } });
-      deletedCount += result.deletedCount;
-      page++;
-    }
-
-    res.status(200).json({ message: `${deletedCount} locations deleted` });
+    const locations = await Location.find({ latitude: Number(latitude), longitude: Number(longitude) });
+    res.status(200).json(locations);
   } catch (error) {
-    console.error("Error deleting user locations:", error);
-    res.status(500).json({ error: "Error deleting user locations" });
+    console.error("Error fetching locations:", error);
+    res.status(500).json({ error: "Error fetching locations" });
   }
 });
 
 
+// app.delete("/user-locations", async (req, res) => {
+//   const { latitude, longitude, batchSize } = req.query;
+//   const limit = parseInt(batchSize) || 100; 
+
+//   let deletedCount = 0;
+//   let page = 1;
+//   let shouldContinue = true;
+
+//   try {
+//     while (shouldContinue) {
+//       const locationsToDelete = await Location.find({ latitude, longitude })
+//         .limit(limit)
+//         .skip((page - 1) * limit);
+
+//       if (locationsToDelete.length === 0) {
+//         shouldContinue = false;
+//         break;
+//       }
+
+//       const result = await Location.deleteMany({ _id: { $in: locationsToDelete.map(loc => loc._id) } });
+//       deletedCount += result.deletedCount;
+//       page++;
+//     }
+
+//     res.status(200).json({ message: `${deletedCount} locations deleted` });
+//   } catch (error) {
+//     console.error("Error deleting user locations:", error);
+//     res.status(500).json({ error: "Error deleting user locations" });
+//   }
+// });
+
+async function deleteObjects() {
+  try {
+    const result = await Location.deleteMany({
+      latitude: 40.8571128,
+      longitude: -73.9013227,
+    });
+
+    console.log(result.deletedCount + " objects deleted");
+  } catch (err) {
+    console.error("Error deleting objects:", err);
+  }
+}
+
+deleteObjects();
 
 
 
