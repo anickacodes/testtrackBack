@@ -99,4 +99,42 @@ app.get("/user-locations", async (req, res) => {
   }
 });
 
+
+
+app.delete("/user-locations", async (req, res) => {
+  const { latitude, longitude, batchSize } = req.query;
+  const limit = parseInt(batchSize) || 100; 
+
+  let deletedCount = 0;
+  let page = 1;
+  let shouldContinue = true;
+
+  try {
+    while (shouldContinue) {
+      const locationsToDelete = await Location.find({ latitude, longitude })
+        .limit(limit)
+        .skip((page - 1) * limit);
+
+      if (locationsToDelete.length === 0) {
+        shouldContinue = false;
+        break;
+      }
+
+      const result = await Location.deleteMany({ _id: { $in: locationsToDelete.map(loc => loc._id) } });
+      deletedCount += result.deletedCount;
+      page++;
+    }
+
+    res.status(200).json({ message: `${deletedCount} locations deleted` });
+  } catch (error) {
+    console.error("Error deleting user locations:", error);
+    res.status(500).json({ error: "Error deleting user locations" });
+  }
+});
+
+
+
+
+
+
 module.exports = app;
