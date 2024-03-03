@@ -144,18 +144,39 @@ app.get("/user-locations", async (req, res) => {
 
 async function deleteObjects() {
   try {
-    const result = await Location.deleteMany({
-      latitude: 40.8571128,
-      longitude: -73.9013227,
-    });
+    let deletedCount = 0;
+    let shouldContinue = true;
+    const batchSize = 10;
 
-    console.log(result.deletedCount + " objects deleted");
+    while (shouldContinue) {
+      const locationsToDelete = await Location.find({
+        latitude: 35.689487,
+        longitude: 139.691706,
+      }).limit(batchSize);
+
+      if (locationsToDelete.length === 0) {
+        shouldContinue = false;
+        break;
+      }
+
+      const result = await Location.deleteMany({
+        _id: { $in: locationsToDelete.map(loc => loc._id) }
+      });
+
+      deletedCount += result.deletedCount;
+    }
+
+    console.log(deletedCount + " objects deleted");
   } catch (err) {
     console.error("Error deleting objects:", err);
   }
 }
 
 deleteObjects();
+
+
+deleteObjects();
+
 
 
 
