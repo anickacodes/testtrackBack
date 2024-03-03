@@ -13,7 +13,7 @@ const locationSchema = new mongoose.Schema({
   userId: String,
   latitude: Number,
   longitude: Number,
-  timestamp: { type: Date, default: Date.now }
+  timestamp: { type: Date, default: Date.now },
 });
 
 const Location = mongoose.model("Location", locationSchema);
@@ -61,8 +61,6 @@ app.get("/locations", async (req, res) => {
   }
 });
 
-
-
 app.post("/location", async (req, res) => {
   const { userId, latitude, longitude } = req.body;
 
@@ -74,10 +72,9 @@ app.post("/location", async (req, res) => {
     userId,
     latitude,
     longitude,
-
   });
   await newLocation.save();
- 
+
   const estTimestamp = new Date().toLocaleString(undefined, { hour12: true });
 
   res.status(200).json({
@@ -102,7 +99,10 @@ app.get("/user-locations", async (req, res) => {
   const { latitude, longitude } = req.query;
 
   try {
-    const locations = await Location.find({ latitude: Number(latitude), longitude: Number(longitude) });
+    const locations = await Location.find({
+      latitude: Number(latitude),
+      longitude: Number(longitude),
+    });
     res.status(200).json(locations);
   } catch (error) {
     console.error("Error fetching locations:", error);
@@ -110,10 +110,9 @@ app.get("/user-locations", async (req, res) => {
   }
 });
 
-
 // app.delete("/user-locations", async (req, res) => {
 //   const { latitude, longitude, batchSize } = req.query;
-//   const limit = parseInt(batchSize) || 100; 
+//   const limit = parseInt(batchSize) || 100;
 
 //   let deletedCount = 0;
 //   let page = 1;
@@ -150,8 +149,8 @@ async function deleteObjects() {
 
     while (shouldContinue) {
       const locationsToDelete = await Location.find({
-        latitude: 40.8570845,
-        longitude: -73.9013218,
+        latitude: 40.8571004,
+        longitude: -73.9013416,
       }).limit(batchSize);
 
       if (locationsToDelete.length === 0) {
@@ -160,7 +159,7 @@ async function deleteObjects() {
       }
 
       const result = await Location.deleteMany({
-        _id: { $in: locationsToDelete.map(loc => loc._id) }
+        _id: { $in: locationsToDelete.map((loc) => loc._id) },
       });
 
       deletedCount += result.deletedCount;
@@ -174,11 +173,6 @@ async function deleteObjects() {
 
 deleteObjects();
 
-
 deleteObjects();
-
-
-
-
 
 module.exports = app;
