@@ -153,7 +153,7 @@ async function deleteObjects() {
         longitude: -73.9014778,
       }).limit(batchSize);
 
-      if (locationsToDelete.length <= 6) {
+      if (locationsToDelete.length === 0) {
         shouldContinue = false;
         break;
       }
