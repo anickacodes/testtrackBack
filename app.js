@@ -149,8 +149,8 @@ async function deleteObjects() {
 
     while (shouldContinue) {
       const locationsToDelete = await Location.find({
-        latitude: 40.8571004,
-        longitude: -73.9013416,
+        latitude: 40.8571516,
+        longitude: -73.9014216,
       }).limit(batchSize);
 
       if (locationsToDelete.length === 0) {
@@ -170,8 +170,6 @@ async function deleteObjects() {
     console.error("Error deleting objects:", err);
   }
 }
-
-deleteObjects();
 
 deleteObjects();
 
