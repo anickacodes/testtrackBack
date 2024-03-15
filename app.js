@@ -1,9 +1,10 @@
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
-const WebSocket = require("ws");
-const url = process.env.MONGODB_URI;
 
+require('dotenv').config();
+
+const url = process.env.MONGODB_URI;
 mongoose.connect(url, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -18,70 +19,11 @@ const locationSchema = new mongoose.Schema({
 
 const Location = mongoose.model("Location", locationSchema);
 
-const wss = new WebSocket.Server({ noServer: true });
-
-wss.on('connection', (ws) => {
-  console.log('Client connected');
-
-  ws.on('message', (message) => {
-    console.log('Received: %s', message);
-  });
-
-  ws.on('close', () => {
-    console.log('Client disconnected');
-  });
-});
-
-// Broadcast location updates to connected clients
-const broadcastLocation = async () => {
-  try {
-    const locations = await Location.find();
-    wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(locations));
-      }
-    });
-  } catch (error) {
-    console.error('Error broadcasting locations:', error);
-  }
-};
-
-setInterval(() => {
-  broadcastLocation();
-}, 5520);
-
 app.use(express.json());
 
 app.get("/", async (req, res) => {
-  res.status(200).send("We are liiive");
+  res.status(200).send("We are live");
 });
-
-// app.get("/api/yelp", async (req, res) => {
-//   const { location, categories } = req.query;
-//   const apiKey = process.env.YELP_API_KEY;
-//   const url = `https://api.yelp.com/v3/businesses/search?location=${location}&categories=${categories}`;
-
-//   try {
-//     const response = await axios.get(url, {
-//       headers: {
-//         Authorization: `Bearer ${apiKey}`,
-//       },
-//     });
-//     res.json(response.data);
-//   } catch (error) {
-//     console.error("Error making request to Yelp API:", error.message);
-//     if (error.response) {
-//       console.error("Response status:", error.response.status);
-//       console.error("Response data:", error.response.data);
-//       res.status(error.response.status).json({ error: error.message });
-//     } else {
-//       console.error("No response from Yelp API");
-//       res.status(500).json({ error: "Error connecting to Yelp API" });
-//     }
-//   }
-// });
-
-//  handle location data
 
 app.get("/locations", async (req, res) => {
   try {
@@ -126,83 +68,5 @@ app.get("/user-locations", async (req, res) => {
     res.status(500).json({ error: "Error fetching user locations" });
   }
 });
-
-app.get("/user-locations", async (req, res) => {
-  const { latitude, longitude } = req.query;
-
-  try {
-    const locations = await Location.find({
-      latitude: Number(latitude),
-      longitude: Number(longitude),
-    });
-    res.status(200).json(locations);
-  } catch (error) {
-    console.error("Error fetching locations:", error);
-    res.status(500).json({ error: "Error fetching locations" });
-  }
-});
-
-// app.delete("/user-locations", async (req, res) => {
-//   const { latitude, longitude, batchSize } = req.query;
-//   const limit = parseInt(batchSize) || 100;
-
-//   let deletedCount = 0;
-//   let page = 1;
-//   let shouldContinue = true;
-
-//   try {
-//     while (shouldContinue) {
-//       const locationsToDelete = await Location.find({ latitude, longitude })
-//         .limit(limit)
-//         .skip((page - 1) * limit);
-
-//       if (locationsToDelete.length === 0) {
-//         shouldContinue = false;
-//         break;
-//       }
-
-//       const result = await Location.deleteMany({ _id: { $in: locationsToDelete.map(loc => loc._id) } });
-//       deletedCount += result.deletedCount;
-//       page++;
-//     }
-
-//     res.status(200).json({ message: `${deletedCount} locations deleted` });
-//   } catch (error) {
-//     console.error("Error deleting user locations:", error);
-//     res.status(500).json({ error: "Error deleting user locations" });
-//   }
-// });
-
-async function deleteObjects() {
-  try {
-    let deletedCount = 0;
-    let shouldContinue = true;
-    const batchSize = 2;
-
-    while (shouldContinue) {
-      const locationsToDelete = await Location.find({
-        latitude: 37.774929,
-        longitude:  -122.419416,
-      }).limit(batchSize);
-
-      if (locationsToDelete.length === 0) {
-        shouldContinue = false;
-        break;
-      }
-
-      const result = await Location.deleteMany({
-        _id: { $in: locationsToDelete.map((loc) => loc._id) },
-      });
-
-      deletedCount += result.deletedCount;
-    }
-
-    console.log(deletedCount + " objects deleted");
-  } catch (err) {
-    console.error("Error deleting objects:", err);
-  }
-}
-
-// deleteObjects();
 
 module.exports = app;
