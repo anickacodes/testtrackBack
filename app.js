@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
-
+const WebSocket = require("ws");
 const url = process.env.MONGODB_URI;
 
 mongoose.connect(url, {
@@ -17,6 +17,38 @@ const locationSchema = new mongoose.Schema({
 });
 
 const Location = mongoose.model("Location", locationSchema);
+
+const wss = new WebSocket.Server({ noServer: true });
+
+wss.on('connection', (ws) => {
+  console.log('Client connected');
+
+  ws.on('message', (message) => {
+    console.log('Received: %s', message);
+  });
+
+  ws.on('close', () => {
+    console.log('Client disconnected');
+  });
+});
+
+// Broadcast location updates to connected clients
+const broadcastLocation = async () => {
+  try {
+    const locations = await Location.find();
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(locations));
+      }
+    });
+  } catch (error) {
+    console.error('Error broadcasting locations:', error);
+  }
+};
+
+setInterval(() => {
+  broadcastLocation();
+}, 5520);
 
 app.use(express.json());
 
@@ -145,15 +177,15 @@ async function deleteObjects() {
   try {
     let deletedCount = 0;
     let shouldContinue = true;
-    const batchSize = 800;
+    const batchSize = 2;
 
     while (shouldContinue) {
       const locationsToDelete = await Location.find({
-        latitude: 37.773972,
-        longitude:  -122.431297,
+        latitude: 37.774929,
+        longitude:  -122.419416,
       }).limit(batchSize);
 
-      if (locationsToDelete.length <= 5) {
+      if (locationsToDelete.length === 0) {
         shouldContinue = false;
         break;
       }
@@ -171,6 +203,6 @@ async function deleteObjects() {
   }
 }
 
-deleteObjects();
+// deleteObjects();
 
 module.exports = app;
